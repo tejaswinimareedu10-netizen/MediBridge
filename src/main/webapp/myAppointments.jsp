@@ -60,6 +60,7 @@
                             <td><span class="badge <%= badgeClass %>"><%= appt.get("status") %></span></td>
                             <td class="text-center">
                                 <% if ("Approved".equalsIgnoreCase(appt.get("status"))) { %>
+                                    <!-- Updated to pass appointmentId -->
                                     <a href="viewPrescription.jsp?appointmentId=<%= appt.get("apptId") %>" class="btn btn-sm btn-outline-primary fw-bold">
                                         👁️ View Prescription
                                     </a>

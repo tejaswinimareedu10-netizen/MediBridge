@@ -94,7 +94,7 @@
                 <p class="text-muted">Generate digital prescriptions with dosage instructions and upload diagnostic lab test results.</p>
                 <div class="d-flex justify-content-center gap-2 mt-auto">
                     <a href="addPrescription.jsp" class="btn btn-warning text-dark fw-bold px-4">Add Prescription</a>
-                    <a href="uploadReports.jsp" class="btn btn-outline-warning text-dark fw-bold px-4">Upload Reports</a>
+                    <a href="uploadReport.jsp" class="btn btn-outline-warning text-dark fw-bold px-4">Upload Reports</a>
                 </div>
             </div>
         </div>

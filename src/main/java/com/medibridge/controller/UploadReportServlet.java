@@ -1,6 +1,6 @@
 package com.medibridge.controller;
 
-import com.medibridge.model.Patient;
+import com.medibridge.model.Doctor;
 import com.medibridge.util.DBConnection;
 import java.io.File;
 import java.io.IOException;
@@ -32,48 +32,65 @@ public class UploadReportServlet extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
         HttpSession session = request.getSession();
-        Patient patient = (Patient) session.getAttribute("patient");
-
-        if (patient == null) {
-            response.sendRedirect("login.jsp");
+        
+        // 1. Verify Doctor Session
+        Doctor doctor = (Doctor) session.getAttribute("doctor");
+        if (doctor == null) {
+            response.sendRedirect("doctorLogin.jsp");
             return;
         }
 
+        // 2. Fetch manual form inputs
+        String patientIdStr = request.getParameter("patientId");
         String reportTitle = request.getParameter("reportTitle");
         Part filePart = request.getPart("reportFile");
 
-        if (filePart == null || filePart.getSize() == 0 || reportTitle == null) {
-            response.sendRedirect("uploadReport.jsp?error=" + URLEncoder.encode("Please select a valid report file!", "UTF-8"));
+        if (patientIdStr == null || patientIdStr.trim().isEmpty() || filePart == null || filePart.getSize() == 0 || reportTitle == null) {
+            response.sendRedirect("uploadReport.jsp?error=" + URLEncoder.encode("Please enter Patient ID, title and select a valid report file!", "UTF-8"));
             return;
         }
 
-        // Project uploads directory path
+        int patientId;
+        try {
+            patientId = Integer.parseInt(patientIdStr.trim());
+        } catch (NumberFormatException e) {
+            response.sendRedirect("uploadReport.jsp?error=" + URLEncoder.encode("Invalid Patient ID format!", "UTF-8"));
+            return;
+        }
+
+        // 3. Project uploads directory path
         String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
         File uploadDir = new File(uploadPath);
         if (!uploadDir.exists()) {
             uploadDir.mkdir();
         }
 
-        // Get file name and make unique with timestamp
+        // 4. Get file name and make unique with timestamp
         String originalFileName = extractFileName(filePart);
         String fileName = System.currentTimeMillis() + "_" + originalFileName;
         String filePath = uploadPath + File.separator + fileName;
 
         // Save file locally
-        filePart.write(filePath);
+        try {
+            filePart.write(filePath);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect("uploadReport.jsp?error=" + URLEncoder.encode("File write failed: " + e.getMessage(), "UTF-8"));
+            return;
+        }
 
-        // Save entry in Database
+        // 5. Save entry in Database
         try (Connection con = DBConnection.getConnection()) {
             if (con != null) {
                 String sql = "INSERT INTO medical_reports (patient_id, report_title, file_name) VALUES (?, ?, ?)";
                 try (PreparedStatement ps = con.prepareStatement(sql)) {
-                    ps.setInt(1, patient.getPatientId());
+                    ps.setInt(1, patientId);
                     ps.setString(2, reportTitle.trim());
                     ps.setString(3, fileName);
 
                     int rows = ps.executeUpdate();
                     if (rows > 0) {
-                        response.sendRedirect("medicalReports.jsp?msg=" + URLEncoder.encode("Lab Report Uploaded Successfully!", "UTF-8"));
+                        response.sendRedirect("uploadReport.jsp?msg=" + URLEncoder.encode("Lab Report Uploaded Successfully!", "UTF-8"));
                         return;
                     }
                 }

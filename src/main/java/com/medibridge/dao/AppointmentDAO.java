@@ -41,10 +41,10 @@ public class AppointmentDAO {
         return status;
     }
 
-    // 2. Method to fetch historical logs for a specific patient
+    // 2. Method to fetch historical logs for a specific patient (MUST HAVE apptId)
     public List<Map<String, String>> getAppointmentsByPatient(int patientId) {
         List<Map<String, String>> list = new ArrayList<>();
-        String sql = "SELECT a.appointment_date, a.appointment_time, a.status, d.full_name, d.specialization " +
+        String sql = "SELECT a.appointment_id AS appt_id, a.appointment_date, a.appointment_time, a.status, d.full_name, d.specialization " +
                      "FROM appointment a JOIN doctor d ON a.doctor_id = d.doctor_id " +
                      "WHERE a.patient_id = ? ORDER BY a.appointment_date DESC";
                      
@@ -56,6 +56,7 @@ public class AppointmentDAO {
             
             while (rs.next()) {
                 Map<String, String> map = new HashMap<>();
+                map.put("apptId", rs.getString("appt_id")); // <-- THIS LINE IS CRITICAL
                 map.put("date", rs.getString("appointment_date"));
                 map.put("time", rs.getString("appointment_time"));
                 map.put("status", rs.getString("status"));
@@ -73,7 +74,7 @@ public class AppointmentDAO {
     // 3. Method to fetch all incoming checkup requests for a specific doctor
     public List<Map<String, String>> getAppointmentsByDoctor(int doctorId) {
         List<Map<String, String>> list = new ArrayList<>();
-        String sql = "SELECT a.id AS appt_id, a.appointment_date, a.appointment_time, a.status, p.full_name, p.phone " +
+        String sql = "SELECT a.appointment_id AS appt_id, a.appointment_date, a.appointment_time, a.status, p.full_name, p.phone " +
                      "FROM appointment a JOIN patient p ON a.patient_id = p.patientId " +
                      "WHERE a.doctor_id = ? ORDER BY a.appointment_date ASC";
         try {
@@ -102,7 +103,7 @@ public class AppointmentDAO {
     // 4. Method to change appointment status (Approved/Rejected)
     public boolean updateAppointmentStatus(int apptId, String status) {
         boolean success = false;
-        String sql = "UPDATE appointment SET status = ? WHERE id = ?";
+        String sql = "UPDATE appointment SET status = ? WHERE appointment_id = ?";
         try {
             Connection con = DBConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);

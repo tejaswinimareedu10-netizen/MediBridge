@@ -39,6 +39,13 @@
         </div>
     <% } %>
 
+    <% if (request.getParameter("error") != null) { %>
+        <div class="alert alert-danger alert-dismissible fade show fw-bold text-center py-2 mb-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i> <%= request.getParameter("error") %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <% } %>
+
     <div class="card p-4 shadow-sm border-0 rounded-4">
         <h5 class="fw-bold mb-3">Your Uploaded Medical & Lab Reports</h5>
 
@@ -48,7 +55,7 @@
                     <tr>
                         <th>Report Title</th>
                         <th>Uploaded Date</th>
-                        <th>Action / View</th>
+                        <th>Actions (View / Delete)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -62,8 +69,9 @@
                                 try (ResultSet rs = ps.executeQuery()) {
                                     while (rs.next()) {
                                         hasReports = true;
+                                        int reportId = rs.getInt("report_id"); // Assuming primary key is report_id
                                         String fileName = rs.getString("file_name");
-                        %>
+                %>
                                         <tr>
                                             <td class="fw-bold text-dark">
                                                 <i class="bi bi-file-earmark-pdf text-danger me-2 fs-5"></i>
@@ -71,12 +79,19 @@
                                             </td>
                                             <td><%= rs.getTimestamp("uploaded_at") %></td>
                                             <td>
-                                                <a href="uploaded_reports/<%= fileName %>" target="_blank" class="btn btn-sm btn-outline-primary fw-bold">
-                                                    <i class="bi bi-eye-fill me-1"></i> View Report
-                                                </a>
+                                                <div class="d-flex gap-2">
+                                                    <!-- View Report Button -->
+                                                    <a href="uploaded_reports/<%= fileName %>" target="_blank" class="btn btn-sm btn-outline-primary fw-bold">
+                                                        <i class="bi bi-eye-fill me-1"></i> View
+                                                    </a>
+                                                    <!-- Delete Report Button -->
+                                                    <a href="DeleteReportServlet?id=<%= reportId %>" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('Are you sure you want to delete this report?');">
+                                                        <i class="bi bi-trash-fill me-1"></i> Delete
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
-                        <%
+                <%
                                     }
                                 }
                             }
